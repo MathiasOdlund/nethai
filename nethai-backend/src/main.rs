@@ -4,10 +4,12 @@ mod models;
 mod storage;
 
 use crate::capture::PacketCapture;
+use axum::http::{HeaderValue, Method};
 use axum::{Extension, Router};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
+use tower_http::cors::{Any, CorsLayer};
 
 // AppState will hold our shared state
 pub struct AppState {
@@ -29,10 +31,17 @@ async fn main() -> shuttle_axum::ShuttleAxum {
     // Initialize shared state
     let state = Arc::new(RwLock::new(AppState::default()));
 
+    // Configure CORS
+    let cors = CorsLayer::new()
+        .allow_origin("http://localhost:5173".parse::<HeaderValue>().unwrap())
+        .allow_methods([Method::GET, Method::POST])
+        .allow_headers(Any);
+
     // Create router with routes
     let router = Router::new()
         .merge(api::routes::create_routes())
-        .layer(Extension(state));
+        .layer(Extension(state))
+        .layer(cors);
 
     Ok(router.into())
 }

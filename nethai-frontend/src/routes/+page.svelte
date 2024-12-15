@@ -1,2 +1,7 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<script>
+	import Status from '../components/home/stauts.svelte';
+	import Interfaces from '../components/home/interfaces.svelte';
+</script>
+
+<Status />
+<Interfaces />
