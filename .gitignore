@@ -1,0 +1,30 @@
+# nethai backend 
+/nethai-backend/.shuttle
+/nethai-backend/target
+/nethai-backend/Secrets*.toml
+
+# nethai frontend 
+/nethai-frontend/node_modules
+
+# Output
+/nethai-frontend/.output
+/nethai-frontend/.vercel
+/nethai-frontend/.netlify
+/nethai-frontend/.wrangler
+/nethai-frontend/.svelte-kit
+/nethai-frontend/build
+
+/nethai-frontend/.DS_Store
+/nethai-frontend/Thumbs.db
+
+# Env
+/nethai-frontend/.env
+/nethai-frontend/.env.*
+/nethai-frontend/.env.test
+
+# Vite
+/nethai-frontend/vite.config.js.timestamp-*
+/nethai-frontend/vite.config.ts.timestamp-*
+
+
+
