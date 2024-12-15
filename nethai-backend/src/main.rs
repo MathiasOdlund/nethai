@@ -3,6 +3,7 @@ mod capture;
 mod models;
 mod storage;
 
+use crate::capture::stats::NetworkStats;
 use crate::capture::PacketCapture;
 use axum::http::{HeaderValue, Method};
 use axum::{Extension, Router};
@@ -15,6 +16,7 @@ use tower_http::cors::{Any, CorsLayer};
 pub struct AppState {
     capture_active: bool,
     capture: Arc<Mutex<Option<PacketCapture>>>,
+    stats: Arc<RwLock<NetworkStats>>,
 }
 
 impl Default for AppState {
@@ -22,6 +24,7 @@ impl Default for AppState {
         Self {
             capture_active: false,
             capture: Arc::new(Mutex::new(None)),
+            stats: Arc::new(RwLock::new(NetworkStats::new())),
         }
     }
 }

@@ -978,6 +978,8 @@ version = "0.1.0"
 dependencies = [
  "axum 0.7.9",
  "pcap",
+ "serde",
+ "serde_json",
  "shuttle-axum",
  "shuttle-runtime",
  "tokio",

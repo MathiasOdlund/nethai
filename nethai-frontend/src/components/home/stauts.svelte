@@ -2,12 +2,14 @@
 	import { onMount } from 'svelte';
 
 	let isCapturing = false;
+	let currentDevice = null;
 
 	async function checkStatus() {
 		try {
 			const response = await fetch('http://127.0.0.1:8000/status');
-			const data = await response.text();
-			isCapturing = data.includes('true');
+			const data = await response.json();
+			isCapturing = data.is_active;
+			currentDevice = data.current_device;
 		} catch (error) {
 			console.error('Error checking status:', error);
 		}
@@ -53,6 +55,10 @@
 			<span class="text-sm">{isCapturing ? 'Active' : 'Inactive'}</span>
 		</div>
 	</div>
+
+	{#if currentDevice}
+		<div class="text-sm text-gray-600">Current Device: {currentDevice}</div>
+	{/if}
 
 	{#if !isCapturing}
 		<button

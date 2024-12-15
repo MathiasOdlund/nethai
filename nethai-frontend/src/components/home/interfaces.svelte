@@ -1,51 +1,76 @@
-<script>
+<script lang="ts">
 	import { onMount } from 'svelte';
 
-	let interfaces = [];
-	let error = null;
+	interface Address {
+		address: string;
+		netmask: string | null;
+		broadcast: string | null;
+	}
+
+	interface Device {
+		name: string;
+		description: string | null;
+		addresses: Address[];
+		is_up: boolean;
+		is_running: boolean;
+		is_wireless: boolean;
+	}
+
+	interface ParsedDevice {
+		name: string;
+		addresses: string[];
+		status: string;
+		isWireless: boolean;
+		isSelected?: boolean;
+	}
+
+	let interfaces: ParsedDevice[] = [];
+	let error: string | null = null;
+	let selectedDevice: string | null = null;
 
 	async function fetchInterfaces() {
 		try {
 			const response = await fetch('http://127.0.0.1:8000/interfaces');
-			const data = await response.text();
+			const devices: Device[] = await response.json();
 
-			// Parse the text response to extract device information
-			const devicesMatch = data.match(/Available devices: \[(.*)\]/);
-			if (devicesMatch) {
-				// Split the devices string and process each device
-				const devicesStr = devicesMatch[1];
-				const devicesList = devicesStr
-					.split('Device {')
-					.filter((d) => d.trim())
-					.map((d) => {
-						const nameMatch = d.match(/name: "([^"]+)"/);
-						const addressesMatch = d.match(/addresses: \[(.*?)\]/);
-						const flagsMatch = d.match(
-							/flags: DeviceFlags \{ if_flags: ([^,]+), connection_status: ([^\s]+) \}/
-						);
+			interfaces = devices.map((device): ParsedDevice => {
+				const status = device.is_up && device.is_running ? 'Connected' : 'Disconnected';
 
-						const addresses = addressesMatch
-							? addressesMatch[1]
-									.split('Address {')
-									.filter((a) => a.trim())
-									.map((a) => {
-										const addrMatch = a.match(/addr: ([^,]+)/);
-										return addrMatch ? addrMatch[1] : null;
-									})
-									.filter((a) => a)
-							: [];
-
-						return {
-							name: nameMatch ? nameMatch[1] : 'Unknown',
-							addresses: addresses,
-							status: flagsMatch ? flagsMatch[2] : 'Unknown',
-							flags: flagsMatch ? flagsMatch[1] : ''
-						};
-					});
-				interfaces = devicesList;
-			}
+				return {
+					name: device.name,
+					addresses: device.addresses.map((addr) => addr.address),
+					status,
+					isWireless: device.is_wireless,
+					isSelected: device.name === selectedDevice
+				};
+			});
 		} catch (err) {
 			error = 'Failed to fetch interfaces';
+			console.error('Error:', err);
+		}
+	}
+
+	async function selectDevice(deviceName: string) {
+		try {
+			const response = await fetch('http://127.0.0.1:8000/device/select', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ name: deviceName })
+			});
+
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+
+			selectedDevice = deviceName;
+			interfaces = interfaces.map((iface) => ({
+				...iface,
+				isSelected: iface.name === deviceName
+			}));
+		} catch (err) {
+			error = 'Failed to select device';
 			console.error('Error:', err);
 		}
 	}
@@ -76,8 +101,21 @@
 										? 'bg-red-500'
 										: 'bg-gray-500'
 							}`}
-						></div>
+						/>
 						<span class="text-sm">{iface.status}</span>
+						<button
+							on:click={() => selectDevice(iface.name)}
+							disabled={selectedDevice !== null}
+							class={`ml-2 rounded-md px-3 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+								iface.isSelected
+									? 'cursor-default bg-green-500'
+									: selectedDevice
+										? 'cursor-not-allowed bg-gray-400'
+										: 'bg-blue-500 hover:bg-blue-600 focus:ring-blue-500'
+							}`}
+						>
+							{iface.isSelected ? 'Selected' : 'Select'}
+						</button>
 					</div>
 				</div>
 				{#if iface.addresses.length > 0}
